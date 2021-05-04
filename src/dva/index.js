@@ -6,17 +6,25 @@ import { createBrowserHistory } from "history"
 import createSagaMiddleware from "redux-saga"
 import * as sideEffects from "redux-saga/effects"
 
+import Plugin, { filterHooks } from "./plugin"
+
 function dva(opts = {}) {
   const history = opts.history || createBrowserHistory()
+  const plugin = new Plugin()
   const app = {
     _models: [],
     _router: null,
     model,
     router,
     start,
+    use,
   }
+  plugin.use(filterHooks(opts))
   const initialReducers = {}
 
+  function use(config) {
+    plugin.use(config)
+  }
   function model(m) {
     const prefixModel = prefixNamespace(m)
     app._models.push(prefixModel)
@@ -57,8 +65,10 @@ function dva(opts = {}) {
     for (let model of app._models) {
       initialReducers[model.namespace] = getReducer(model)
     }
+    const extraReducers = plugin.get("extraReducers")
     return combineReducers({
       ...initialReducers,
+      ...extraReducers,
     })
   }
 
@@ -82,21 +92,25 @@ function dva(opts = {}) {
   function getSaga(model) {
     return function* () {
       for (let key in model.effects) {
-        const wathcer = getWatcher(key, model)
+        const wathcer = getWatcher(key, model, plugin.get("onEffect"))
         yield sideEffects.fork(wathcer)
       }
     }
   }
-  function getWatcher(key, m) {
+  function getWatcher(key, m, onEffect) {
     function put(action) {
       return sideEffects.put({
         ...action,
         type: `${m.namespace}/${action.type}`,
       })
     }
+    let effect = m.effects[key]
     const watcher = function* () {
+      for (let fn of onEffect) {
+        effect = fn(effect, sideEffects, m.namespace, key)
+      }
       yield sideEffects.takeEvery(key, function* (action) {
-        yield m.effects[key](action, { ...sideEffects, put })
+        yield effect(action, { ...sideEffects, put })
       })
     }
     return watcher

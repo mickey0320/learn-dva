@@ -1,9 +1,10 @@
 import React from "react"
 import { BrowserRouter as Router, Route } from "./dva/router"
 import dva, { connect } from "./dva"
+import createLoading from "./dva/plugins/dva-loading"
 import { delay } from "./utils"
 
-const app = dva()
+const app = dva({})
 app.model({
   namespace: "counter",
   state: {
@@ -24,6 +25,7 @@ app.model({
     },
   },
 })
+app.use(createLoading())
 
 function Counter(props) {
   return (
@@ -36,6 +38,7 @@ function Counter(props) {
       </button>
       <button
         onClick={() => props.dispatch({ type: "counter/asyncAdd", payload: 2 })}
+        disabled={props.loading}
       >
         异步加1
       </button>
@@ -46,6 +49,7 @@ function Counter(props) {
 const CounterWrapper = connect((state) => {
   return {
     num: state.counter.num,
+    loading: state.loading.models.counter,
   }
 })(Counter)
 
