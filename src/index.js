@@ -1,17 +1,60 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react"
+import { BrowserRouter as Router, Route } from "./dva/router"
+import dva, { connect } from "./dva"
+import { delay } from "./utils"
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const app = dva()
+app.model({
+  namespace: "counter",
+  state: {
+    num: 0,
+  },
+  reducers: {
+    add(state, { payload }) {
+      return {
+        ...state,
+        num: state.num + payload,
+      }
+    },
+  },
+  effects: {
+    *asyncAdd({ payload }, { put }) {
+      yield delay("hello", 1000)
+      yield put({ type: "add", payload })
+    },
+  },
+})
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+function Counter(props) {
+  return (
+    <div>
+      <p>{props.num}</p>
+      <button
+        onClick={() => props.dispatch({ type: "counter/add", payload: 2 })}
+      >
+        加1
+      </button>
+      <button
+        onClick={() => props.dispatch({ type: "counter/asyncAdd", payload: 2 })}
+      >
+        异步加1
+      </button>
+    </div>
+  )
+}
+
+const CounterWrapper = connect((state) => {
+  return {
+    num: state.counter.num,
+  }
+})(Counter)
+
+app.router(() => {
+  return (
+    <Router>
+      <Route path="/" component={CounterWrapper}></Route>
+    </Router>
+  )
+})
+
+app.start("#root")
