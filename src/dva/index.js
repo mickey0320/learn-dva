@@ -46,6 +46,14 @@ function dva(opts = {}) {
       <Provider store={store}>{app._router({ app, history })}</Provider>,
       document.querySelector(selector)
     )
+
+    app.model = function (m) {
+      m = model(m)
+      const rootReducer = createReducer(app)
+      store.replaceReducer(rootReducer)
+      const saga = getSaga(m)
+      sagaMiddleware.run(saga)
+    }
   }
 
   function prefixNamespace(model) {

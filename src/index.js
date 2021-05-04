@@ -1,10 +1,18 @@
 import React from "react"
-import { BrowserRouter as Router, Route } from "./dva/router"
+import { BrowserRouter as Router, Route, Link } from "./dva/router"
 import dva, { connect } from "./dva"
 import createLoading from "./dva/plugins/dva-loading"
+import dynamic from "./dva/dynamic"
 import { delay } from "./utils"
 
 const app = dva({})
+const User = dynamic({
+  app,
+  models: () => [
+    import(/* webpackChunkName: "userModel" */ "./store/userModel"),
+  ],
+  component: () => import(/* webpackChunkName: "user" */ "./user"),
+})
 app.model({
   namespace: "counter",
   state: {
@@ -42,6 +50,9 @@ function Counter(props) {
       >
         异步加1
       </button>
+      <p>
+        <Link to="/user">go to user page</Link>
+      </p>
     </div>
   )
 }
@@ -56,7 +67,8 @@ const CounterWrapper = connect((state) => {
 app.router(() => {
   return (
     <Router>
-      <Route path="/" component={CounterWrapper}></Route>
+      <Route path="/" exact component={CounterWrapper}></Route>
+      <Route path="/user" component={User}></Route>
     </Router>
   )
 })
