@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Link } from "./dva/router"
 import dva, { connect } from "./dva"
 import createLoading from "./dva/plugins/dva-loading"
 import dynamic from "./dva/dynamic"
+import immer from "./dva/plugins/dva-immer"
 import { delay } from "./utils"
 
 const app = dva({})
@@ -34,6 +35,7 @@ app.model({
   },
 })
 app.use(createLoading())
+app.use(immer())
 
 function Counter(props) {
   return (

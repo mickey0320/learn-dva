@@ -18,12 +18,12 @@ const userModel = {
   },
   reducers: {
     add(state, action) {
-      const list = [...state.list, action.payload]
-
-      return {
-        ...state,
-        list,
-      }
+      state.list.push(action.payload)
+      // const list = [...state.list, action.payload]
+      // return {
+      //   ...state,
+      //   list,
+      // }
     },
   },
   effects: {

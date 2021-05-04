@@ -1,7 +1,8 @@
-const hooks = ["extraReducers", "onEffect"]
+const hooks = ["extraReducers", "onEffect", "_handleActions"]
 
 class Plugin {
   constructor() {
+    this._handleActions = null
     this.hooks = hooks.reduce((memo, hookName) => {
       memo[hookName] = []
 
@@ -10,7 +11,11 @@ class Plugin {
   }
   use(config = {}) {
     for (let hookName in config) {
-      this.hooks[hookName].push(config[hookName])
+      if (hookName === "handleActions") {
+        this._handleActions = config[hookName]
+      } else {
+        this.hooks[hookName].push(config[hookName])
+      }
     }
   }
   get(key) {

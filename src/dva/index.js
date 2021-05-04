@@ -81,13 +81,18 @@ function dva(opts = {}) {
   }
 
   function getReducer(model) {
-    return function (state = model.state || {}, action) {
+    const reducer = function (state = model.state || {}, action) {
       const reducer = model.reducers[action.type]
       if (reducer) {
         return reducer(state, action)
       }
       return state
     }
+    const handleActions = plugin._handleActions
+    if (handleActions) {
+      return handleActions(model.reducers, model.state)
+    }
+    return reducer
   }
   function getSagas(app) {
     const sagas = []
